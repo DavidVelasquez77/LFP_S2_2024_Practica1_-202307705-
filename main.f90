@@ -16,7 +16,7 @@ program gestionar_inventario
     use InventarioModule
     type(Inventario), dimension(:), allocatable :: inventarios
     character(len=100) :: filename
-    integer :: num_inventario
+    integer :: num_inventario = 0
     integer :: opcion
 
     do
@@ -35,7 +35,7 @@ program gestionar_inventario
         select case (opcion)
             case (1)
                 PRINT *, 'Ingrese el nombre de la ruta del archivo de inventario:'
-                READ *,  filename
+                READ *, filename
                 call analizador(filename)
             case (2)
                 PRINT *, 'Ingrese el nombre de la ruta del archivo de movimientos:'
@@ -74,10 +74,12 @@ contains
             END IF
         END DO
         
-        print *, field(1)
-        print *, field(2)
-        print *, field(3)
-        print *, field(4)
+        print *, 'Datos extraidos:'
+        print *, 'Nombre: ', field(1)
+        print *, 'Cantidad: ', field(2)
+        print *, 'Precio Unitario: ', field(3)
+        print *, 'Ubicacion: ', field(4)
+        print *, '---------------------------------------'
     END SUBROUTINE parse_line
 
     SUBROUTINE parse_line3(line)
@@ -101,9 +103,11 @@ contains
             END IF
         END DO
         
-        print *, field(1)
-        print *, field(2)
-        print *, field(3)
+        print *, 'Datos extraidos para movimientos:'
+        print *, 'Nombre: ', field(1)
+        print *, 'Cantidad: ', field(2)
+        print *, 'Ubicacion: ', field(3)
+        print *, '---------------------------------------'
     END SUBROUTINE parse_line3
 
     SUBROUTINE analizador(archivo)
@@ -112,7 +116,7 @@ contains
         integer :: ios
         character(len=50) :: comando
         character(len=50) :: datos
-        integer :: i, start, end_pos
+        integer :: start, end_pos
 
         open(unit=10, file=archivo, status='old', action='read', iostat=ios)
         if (ios /= 0) then
@@ -135,16 +139,19 @@ contains
 
             select case (comando)
             case ('crear_equipo')
-                print *, 'Crear equipo'
+                print *, '---------------------------------------'
+                PRINT *, 'Comando valido: Crear equipo'
                 call parse_line(datos)
             case ('agregar_stock')
-                print *, 'Agregar stock'
+                        print *, '---------------------------------------'
+                PRINT *, 'Comando valido: Agregar stock'
                 call parse_line3(datos)
-            case ('eliminar_stock')
-                print *, 'Eliminar stock'
-                print *, datos
+            case ('eliminar_equipo')
+                        print *, '---------------------------------------'
+                PRINT *, 'Comando valido: Eliminar stock'
+                call parse_line3(datos)
             case default
-                print *, 'Comando no valido'
+                PRINT *, 'Comando no valido'
             end select
 
         end do
