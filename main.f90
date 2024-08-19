@@ -14,7 +14,7 @@ end module InventarioModule
 
     program gestionar_inventario
         use InventarioModule
-        type (Inventario), dimension(:), allocatable :: inventarios(:)
+        type (Inventario), dimension(:), allocatable :: inventarios
         character(len=100) :: filename
         integer :: num_inventario
         integer :: opcion
@@ -36,7 +36,7 @@ end module InventarioModule
                 case (1)
                     PRINT *, 'Ingrese el nombre de la ruta del archivo de inventario:'
                     READ *,  filename
-                    call analizador(filename,inventarios)
+                    call analizador(filename)
                 case (2)
                     PRINT *, 'Ingrese el nombre de la ruta del archivo de movimientos:'
                     READ *, filename
@@ -52,9 +52,7 @@ end module InventarioModule
         end do
 
         contains
-        SUBROUTINE parse_line(line, inventario1)
-            use InventarioModule, only: Inventario
-            type(Inventario), intent(out):: inventario1
+        SUBROUTINE parse_line(line)
             CHARACTER(LEN=*), INTENT(IN) :: line
             INTEGER :: i 
             CHARACTER(LEN=200) :: temp_line 
@@ -75,11 +73,10 @@ end module InventarioModule
                 END IF
             END DO
             
-            inventario1%nombre = TRIM(field(1))
-            inventario1%ubicacion = TRIM(field(2))
-            READ(field(3), '(I10)') inventario1%cantidad
-            READ(field(4), '(I10)') inventario1%precio_unitario
-        
+            print *, field(1)
+            print *, field(2)
+            print *, field(3)
+            print *, field(4)
         
             
         END SUBROUTINE parse_line
@@ -89,7 +86,7 @@ end module InventarioModule
             INTEGER :: i 
             CHARACTER(LEN=200) :: temp_line 
             INTEGER :: start, end_pos 
-            CHARACTER(LEN=50) :: field(3)
+            CHARACTER(LEN=50) :: field(4)
     
             temp_line = line
             start = 1
@@ -108,29 +105,24 @@ end module InventarioModule
             print *, field(1)
             print *, field(2)
             print *, field(3)
+        
             
         END SUBROUTINE parse_line3
 
 
-            SUBROUTINE analizador(archivo, inventarios)
-
+            SUBROUTINE analizador(archivo)
                 character(len=100) :: archivo ! nombre del archivo
                 character(len=100) :: line !variable para leer linea por linea
                 integer :: ios !error del archivo
                 character(len=50) :: comando !comando a ejecutar agregar stocker, eleminar stock
                 character(len=50) :: datos !obtener la linea
                 integer :: i, start, end_pos ! variables para leer y separ datos
-                integer :: contador
-                integer :: num_inventario
-
 
                 open(unit=10, file=archivo, status='old', action='read', iostat=ios)
                 if (ios /= 0) then
                     PRINT *, 'Error al abrir el archivo'
                     stop
                 end if
-
-                contador = 0
 
                 do
                     read(10, '(A)', iostat=ios) line
@@ -148,9 +140,7 @@ end module InventarioModule
                     select case (comando)
                     case ('crear_equipo')
                         print *, 'Crear equipo'
-                        call parse_line(datos, inventarios(contador))
-                        contador = contador + 1
-
+                        call parse_line(datos)
                     case ('agregar_stock')
                         print *, 'Agregar stock'
                         call parse_line3(datos)
