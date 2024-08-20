@@ -103,7 +103,10 @@ subroutine CrearArchivo()
     character(len=256) :: nombre, cantidad, precio_unitario, ubicacion, linea, comando
     character(len=256) :: archivoEntrada
 
-    print *, "Ingrese la ruta del archivo de inventario inicial:"
+    print *, "****************************************"
+    print *, "*   Ingrese la ruta del archivo de     *"
+    print *, "*         inventario inicial:          *"
+    print *, "****************************************"
     read *, archivoEntrada  
 
     ! Asignando unidades
@@ -189,7 +192,7 @@ subroutine AccionesArchivo()
 
     print *, "****************************************"
     print *, "*   Ingrese la ruta del archivo de     *"
-    print *, "*    instrucciones de movimientos:       *"
+    print *, "*    instrucciones de movimientos:     *"
     print *, "****************************************"
     read *, archivoAcciones
 
@@ -283,22 +286,26 @@ end subroutine agregar_stock
 subroutine eliminar_equipo(nombre, cantidad, ubicacion)
     use productoModule
     use global_vars
-    !dummy
-    character(len=256), intent (in) :: nombre
-    integer, intent (in) :: cantidad
-    character(len=256), intent (in) :: ubicacion
+    character(len=256), intent(in) :: nombre
+    integer, intent(in) :: cantidad
+    character(len=256), intent(in) :: ubicacion
     logical :: encontrado = .false.
 
-    do i=1, n-1
+    do i = 1, n - 1
         if (trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
-            call inventario(i)%quitarStock(cantidad)
             encontrado = .true.
-            print *, "Stock reducido de ", trim(nombre), " en ", trim(ubicacion)
-            print *, "Nueva cantidad:", inventario(i)%cantidad
+            if (cantidad <= inventario(i)%cantidad) then
+                call inventario(i)%quitarStock(cantidad)
+                print *, "Stock reducido de ", trim(nombre), " en ", trim(ubicacion)
+                print *, "Nueva cantidad: ", inventario(i)%cantidad
+            else
+                print *, "Error: La cantidad a eliminar es mayor que la cantidad existente en ", trim(ubicacion)
+            end if
         end if
     end do
 
     if (.not. encontrado) then
-        print *, "No se encontro el producto ", trim(nombre), " en la ubicacion ", trim(ubicacion)
+        print *, "No se encontró el producto ", trim(nombre), " en la ubicación ", trim(ubicacion)
     end if
 end subroutine eliminar_equipo
+
