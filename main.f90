@@ -55,16 +55,19 @@ program main
     implicit  none 
     integer:: op !variable para leer la opcion
 
-    print *, "Bienvenido al menú"
+
     do
-        print *, "------MENU------"
-        print *, "1. Cargar Inventario inicial"
-        print *, "2. Cargar Instrucciones de movimientos"
-        print *, "3. Crear Informe de inventario"
-        print *, "4. Salir"
-        print *, "5. Limpiar pantalla"
-        print *, "Ingrese una opcion"   
-        read *,op
+        PRINT *, '****************************************'
+        PRINT *, '         SISTEMA DE INVENTARIO          '
+        PRINT *, '****************************************'
+        PRINT *, '1. Cargar Inventario'
+        PRINT *, '2. Cargar Movimientos'
+        PRINT *, '3. Mostrar Inventario'
+        PRINT *, '4. Salir'
+        PRINT *, '****************************************'
+        PRINT *, 'Seleccione una opcion (1-4):'
+        PRINT *, '****************************************'
+        READ (*, *) op
         select case (op)
         case (1)
             call CrearArchivo()
@@ -101,7 +104,7 @@ subroutine CrearArchivo()
     character(len=256) :: archivoEntrada
 
     print *, "Ingrese la ruta del archivo de inventario inicial:"
-    read *, archivoEntrada
+    read *, archivoEntrada  
 
     ! Asignando unidades
     iunit = 10
@@ -115,7 +118,7 @@ subroutine CrearArchivo()
         read(iunit, '(A)', iostat=ios) linea
         if (ios /= 0) exit
         linea = trim(linea)
-        print *, linea
+        
         ! Encuentra el primer espacio para extraer el comando
         pos = index(linea, ' ')
         if (pos > 0) then
@@ -141,6 +144,13 @@ subroutine CrearArchivo()
 
                         if (comando == "crear_equipo") then
                             call crearProducto(nombre, cantidad_int, precio_real, ubicacion)
+                            ! Mostrar información del equipo creado en el formato solicitado
+                            print *, "****************************************"
+                            print *, "Nombre: ", trim(nombre)
+                            print *, "Cantidad: ", cantidad_int
+                            print *, "Precio: ", precio_real
+                            print *, "Ubicacion: ", trim(ubicacion)
+                            print *, "****************************************"
                         end if
 
                     end if
@@ -150,6 +160,7 @@ subroutine CrearArchivo()
     end do
     close(unit=iunit)
 end subroutine CrearArchivo
+
 
 
 subroutine crearProducto(nombre, cantidad, precio_unitario, ubicacion)
@@ -176,7 +187,10 @@ subroutine AccionesArchivo()
     character(len=256) :: nombre, ubicacion, linea, comando
     character(len=256) :: archivoAcciones
 
-    print *, "Ingrese la ruta del archivo de instrucciones de movimientos:"
+    print *, "****************************************"
+    print *, "*   Ingrese la ruta del archivo de     *"
+    print *, "*    instrucciones de movimientos:       *"
+    print *, "****************************************"
     read *, archivoAcciones
 
     ! Archivo en modo lectura
@@ -185,15 +199,27 @@ subroutine AccionesArchivo()
 
     ! Verificar si hay error al abrir el archivo
     if (ios /= 0) then
-        print *, "Error al abrir el archivo: ", archivoAcciones
+        print *, "****************************************"
+        print *, "*  Error al abrir el archivo:          *"
+        print *, "* ", trim(archivoAcciones), " *"
+        print *, "****************************************"
         stop
     end if
+
+    print *, "****************************************"
+    print *, "*  Procesando archivo de acciones:     *"
+    print *, "* ", trim(archivoAcciones), " *"
+    print *, "****************************************"
 
     do
         read(iunit, '(A)', iostat=ios) linea
         if (ios /= 0) exit
         linea = trim(linea)
-        print *, "Leyendo linea:", linea
+        
+        ! Imprimir línea leída con formato
+        print *, "----------------------------------------"
+        print *, " Leyendo linea: ", trim(adjustl(linea))
+        print *, "----------------------------------------"
 
         ! Encuentra el primer espacio para extraer el comando
         pos = index(linea, ' ')
@@ -221,8 +247,14 @@ subroutine AccionesArchivo()
         end if
     end do
 
+    print *, "****************************************"
+    print *, "*       Procesamiento completado       *"
+    print *, "****************************************"
+
     close(unit=iunit)
 end subroutine AccionesArchivo
+
+
 
 
 subroutine agregar_stock(nombre, cantidad, ubicacion)
@@ -235,16 +267,16 @@ subroutine agregar_stock(nombre, cantidad, ubicacion)
     logical :: encontrado = .false.
 
     do i=1, n-1
-        if(trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
+        if (trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
             call inventario(i)%agregarStock(cantidad)
             encontrado = .true.
-            print *, "Stock agregado a", nombre, "en", ubicacion
-            print *, "Nueva cantidad:", inventario(i)%cantidad
+            print *, "Stock agregado a ", trim(nombre), " en ", trim(ubicacion)
+            print *, "Nueva cantidad: ", inventario(i)%cantidad
         end if
     end do
 
     if (.not. encontrado) then
-        print *, "No se encontró el producto",nombre, "en la ubicación", ubicacion
+        print *, "No se encontró el producto ", trim(nombre), " en la ubicación ", trim(ubicacion)
     end if
 end subroutine agregar_stock
 
@@ -258,15 +290,15 @@ subroutine eliminar_equipo(nombre, cantidad, ubicacion)
     logical :: encontrado = .false.
 
     do i=1, n-1
-        if(trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
+        if (trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
             call inventario(i)%quitarStock(cantidad)
             encontrado = .true.
-            print *, "Stock reducido de",nombre, "en ",ubicacion
-            print *, "Nueva cantidad:",inventario(i)%cantidad
+            print *, "Stock reducido de ", trim(nombre), " en ", trim(ubicacion)
+            print *, "Nueva cantidad:", inventario(i)%cantidad
         end if
     end do
 
     if (.not. encontrado) then
-        print *, "No se encontró el producto",nombre, "en la ubicación", ubicacion
+        print *, "No se encontro el producto ", trim(nombre), " en la ubicacion ", trim(ubicacion)
     end if
 end subroutine eliminar_equipo
