@@ -1,6 +1,0 @@
-crear_equipo Lapices;100;2.50;BodegaA
-crear_equipo Computadoras;40;3000;BodegaB
-crear_equipo Escritorios;75;100;BodegaC
-agregar_stock Lapices;50;BodegaA
-eliminar_equipo Computadoras;50;BodegaB
-agregar_stock Escritorio;75;BodegaC

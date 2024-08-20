@@ -1,166 +1,272 @@
-module InventarioModule
-    implicit none 
+module productoModule
+    type :: equipo 
+    character(len=256) :: nombre
+    integer:: cantidad
+    real:: precio_unitario
+    character(len=256):: ubicacion
+    contains
+        procedure :: inicializar
+        !procedure :: mostrar 
+        procedure :: agregarStock
+        procedure :: quitarStock
 
-    type :: Inventario
-        character(len=50) :: nombre
-        character(len=50) :: ubicacion
-        integer :: cantidad
-        real :: precio_unitario 
-    end type Inventario
+    end type equipo
+    contains
+    !Inicializar
+    subroutine inicializar(this, nombre, cantidad, precio_unitario, ubicacion)
+        class (equipo), intent(inout) :: this
+        character(len=256), intent (in) :: nombre
+        integer, intent (in) :: cantidad
+        real, intent (in) :: precio_unitario
+        character(len=256), intent (in) :: ubicacion
+        this%nombre = nombre
+        this%cantidad = cantidad
+        this%precio_unitario = precio_unitario
+        this%ubicacion = ubicacion  
 
-    integer, parameter :: MAX_INVENTARIO = 100
+        end subroutine inicializar 
 
-end module InventarioModule
+!agregar stock
+        subroutine agregarStock(this, cantidad)
+            class(equipo), intent(inout) :: this
+            integer, intent(in) :: cantidad
+            this%cantidad = this%cantidad + cantidad
+            end subroutine agregarStock
+!quitar stock
+            subroutine quitarStock(this, cantidad)
+                class(equipo), intent(inout) :: this
+                integer, intent(in) :: cantidad
+                this%cantidad = this%cantidad-cantidad
+                end subroutine quitarStock 
 
-program gestionar_inventario
-    use InventarioModule
-    type(Inventario), dimension(:), allocatable :: inventarios
-    character(len=100) :: filename
-    integer :: num_inventario = 0
-    integer :: opcion
 
+end module productoModule
+
+module global_vars
+use productoModule
+integer :: n=1
+integer :: i
+type (equipo), dimension (150) :: inventario  
+end module global_vars
+
+program main
+    use productoModule
+    use global_vars
+    implicit  none 
+    integer:: op !variable para leer la opcion
+
+    print *, "Bienvenido al menú"
     do
-        PRINT *, '****************************************'
-        PRINT *, '         SISTEMA DE INVENTARIO          '
-        PRINT *, '****************************************'
-        PRINT *, '1. Cargar Inventario'
-        PRINT *, '2. Cargar Movimientos'
-        PRINT *, '3. Mostrar Inventario'
-        PRINT *, '4. Salir'
-        PRINT *, '****************************************'
-        PRINT *, 'Seleccione una opcion (1-4):'
-        PRINT *, '****************************************'
-        READ (*, *) opcion   
-        
-        select case (opcion)
-            case (1)
-                PRINT *, 'Ingrese el nombre de la ruta del archivo de inventario:'
-                READ *, filename
-                call analizador(filename)
-            case (2)
-                PRINT *, 'Ingrese el nombre de la ruta del archivo de movimientos:'
-                READ *, filename
-                call analizador(filename)  ! Aquí llamamos al analizador también para los movimientos
-            case (3)
-                call mostrar_inventario()
-            case (4)
-                PRINT *, 'Saliendo del sistema'
-                exit
-            case default
-                PRINT *, 'Opcion no valida'
-        end select
+        print *, "------MENU------"
+        print *, "1. Cargar Inventario inicial"
+        print *, "2. Cargar Instrucciones de movimientos"
+        print *, "3. Crear Informe de inventario"
+        print *, "4. Salir"
+        print *, "5. Limpiar pantalla"
+        print *, "Ingrese una opcion"   
+        read *,op
+        select case (op)
+        case (1)
+            call CrearArchivo()
+        case (2)
+            call AccionesArchivo()
+        case (3)
+            
+        case (4)
+            print *, "Saliendo del sistema..."
+            do i=1, n-1
+                print *, "Equipo: ", i
+                print *, "Nombre: ", inventario(i)%nombre
+                print *, "cantidad: ", inventario(i)%cantidad
+                print *, "Precio: ", inventario(i)%precio_unitario
+                print *, "Ubicacion: ", inventario(i)%ubicacion
+            end do
+            stop
+        case (5)
+            call system ("cls")
+        case default 
+            print *, "Opcion no valida"
+        end select 
     end do
 
-contains
+end program main
 
-    SUBROUTINE parse_line(line)
-        CHARACTER(LEN=*), INTENT(IN) :: line
-        INTEGER :: i 
-        CHARACTER(LEN=200) :: temp_line 
-        INTEGER :: start, end_pos 
-        CHARACTER(LEN=50) :: field(4)
+subroutine CrearArchivo()
+    use productoModule
+    use global_vars
 
-        temp_line = line
-        start = 1
+    integer :: iunit, ios, pos, cantidad_int
+    real :: precio_real
+    character(len=256) :: nombre, cantidad, precio_unitario, ubicacion, linea, comando
+    character(len=256) :: archivoEntrada
 
-        ! Separar las líneas en campos por ;
-        DO i = 1, 4
-            end_pos = INDEX(temp_line(start:), ';')
-            IF (end_pos == 0 .AND. i == 4) THEN
-                field(i) = temp_line(start:)
-            ELSE    
-                field(i) = temp_line(start:start+end_pos-2)
-                start = start + end_pos
-            END IF
-        END DO
-        
-        print *, 'Datos extraidos:'
-        print *, 'Nombre: ', field(1)
-        print *, 'Cantidad: ', field(2)
-        print *, 'Precio Unitario: ', field(3)
-        print *, 'Ubicacion: ', field(4)
-        print *, '---------------------------------------'
-    END SUBROUTINE parse_line
+    print *, "Ingrese la ruta del archivo de inventario inicial:"
+    read *, archivoEntrada
 
-    SUBROUTINE parse_line3(line)
-        CHARACTER(LEN=*), INTENT(IN) :: line
-        INTEGER :: i 
-        CHARACTER(LEN=200) :: temp_line 
-        INTEGER :: start, end_pos 
-        CHARACTER(LEN=50) :: field(3)
+    ! Asignando unidades
+    iunit = 10
+    open(unit=iunit, file=trim(archivoEntrada), status="old", action="read", iostat=ios)
+    if (ios /= 0) then
+        print *, "Error al abrir el archivo: ", archivoEntrada
+        stop    
+    end if
 
-        temp_line = line
-        start = 1
+    do 
+        read(iunit, '(A)', iostat=ios) linea
+        if (ios /= 0) exit
+        linea = trim(linea)
+        print *, linea
+        ! Encuentra el primer espacio para extraer el comando
+        pos = index(linea, ' ')
+        if (pos > 0) then
+            comando = linea(1:pos-1)
+            linea = trim(linea(pos+1:))
+            ! Separar por ;
+            pos = index(linea, ';')
+            if (pos > 0) then
+                nombre = linea(1:pos-1)
+                linea = trim(linea(pos+1:))
+                ! Siguiente atributo
+                pos = index(linea, ';')
+                if (pos > 0) then
+                    cantidad = linea(1:pos-1)
+                    linea = trim(linea(pos+1:))
+                    read(cantidad, '(I10)', iostat=ios) cantidad_int
+                    ! Siguiente atributo
+                    pos = index(linea, ';')
+                    if (pos > 0) then
+                        precio_unitario = linea(1:pos-1)
+                        read(precio_unitario, '(F10.2)', iostat=ios) precio_real
+                        ubicacion = trim(linea(pos+1:))
 
-        ! Separar las líneas en campos por ;
-        DO i = 1, 3
-            end_pos = INDEX(temp_line(start:), ';')
-            IF (end_pos == 0 .AND. i == 3) THEN
-                field(i) = temp_line(start:)
-            ELSE    
-                field(i) = temp_line(start:start+end_pos-2)
-                start = start + end_pos
-            END IF
-        END DO
-        
-        print *, 'Datos extraidos para movimientos:'
-        print *, 'Nombre: ', field(1)
-        print *, 'Cantidad: ', field(2)
-        print *, 'Ubicacion: ', field(3)
-        print *, '---------------------------------------'
-    END SUBROUTINE parse_line3
+                        if (comando == "crear_equipo") then
+                            call crearProducto(nombre, cantidad_int, precio_real, ubicacion)
+                        end if
 
-    SUBROUTINE analizador(archivo)
-        character(len=100) :: archivo
-        character(len=100) :: line
-        integer :: ios
-        character(len=50) :: comando
-        character(len=50) :: datos
-        integer :: start, end_pos
-
-        open(unit=10, file=archivo, status='old', action='read', iostat=ios)
-        if (ios /= 0) then
-            PRINT *, 'Error al abrir el archivo'
-            stop
+                    end if
+                end if
+            end if
         end if
+    end do
+    close(unit=iunit)
+end subroutine CrearArchivo
 
-        do
-            read(10, '(A)', iostat=ios) line
-            if (ios /= 0) EXIT
-            start = 1
-            end_pos = SCAN(line(start:), ' ')
-            IF (end_pos == 0) THEN
-                comando = TRIM(line(start:))
-                datos = ''
-            ELSE 
-                comando = TRIM(line(start:start+end_pos-2))
-                datos = TRIM(line(start+end_pos:))
-            END IF
 
-            select case (comando)
-            case ('crear_equipo')
-                print *, '---------------------------------------'
-                PRINT *, 'Comando valido: Crear equipo'
-                call parse_line(datos)
-            case ('agregar_stock')
-                        print *, '---------------------------------------'
-                PRINT *, 'Comando valido: Agregar stock'
-                call parse_line3(datos)
-            case ('eliminar_equipo')
-                        print *, '---------------------------------------'
-                PRINT *, 'Comando valido: Eliminar stock'
-                call parse_line3(datos)
-            case default
-                PRINT *, 'Comando no valido'
-            end select
+subroutine crearProducto(nombre, cantidad, precio_unitario, ubicacion)
+    use productoModule
+    use global_vars
+    !dummy
+    character(len=256), intent (in) :: nombre
+    integer, intent (in) :: cantidad
+    real, intent (in) :: precio_unitario
+    character(len=256), intent (in) :: ubicacion
+    type(equipo) :: nuevoEquipo
+    call nuevoEquipo%inicializar(nombre, cantidad, precio_unitario, ubicacion)
+    inventario(n) = nuevoEquipo
+    n= n + 1
+ 
+    read *
+end subroutine crearProducto
 
-        end do
-        close(10)
-    end SUBROUTINE analizador
+subroutine AccionesArchivo()
+    use productoModule
+    use global_vars
 
-    SUBROUTINE mostrar_inventario()
-        ! Implementación para mostrar el inventario
-        PRINT *, 'Función mostrar inventario aún no implementada.'
-    END SUBROUTINE mostrar_inventario
+    integer :: iunit, ios, pos, cantidad_int
+    character(len=256) :: nombre, ubicacion, linea, comando
+    character(len=256) :: archivoAcciones
 
-end program gestionar_inventario
+    print *, "Ingrese la ruta del archivo de instrucciones de movimientos:"
+    read *, archivoAcciones
+
+    ! Archivo en modo lectura
+    iunit = 11
+    open(unit=iunit, file=trim(archivoAcciones), status="old", action="read", iostat=ios)
+
+    ! Verificar si hay error al abrir el archivo
+    if (ios /= 0) then
+        print *, "Error al abrir el archivo: ", archivoAcciones
+        stop
+    end if
+
+    do
+        read(iunit, '(A)', iostat=ios) linea
+        if (ios /= 0) exit
+        linea = trim(linea)
+        print *, "Leyendo linea:", linea
+
+        ! Encuentra el primer espacio para extraer el comando
+        pos = index(linea, ' ')
+        if (pos > 0) then
+            comando = trim(linea(1:pos-1))
+            linea = trim(linea(pos+1:))
+            ! Separar por ;
+            pos = index(linea, ';')
+            if (pos > 0) then
+                nombre = trim(linea(1:pos-1))
+                linea = trim(linea(pos+1:))
+                ! Siguiente atributo
+                pos = index(linea, ';')
+                if (pos > 0) then
+                    read(linea(1:pos-1), '(I10)', iostat=ios) cantidad_int
+                    ubicacion = trim(linea(pos+1:))
+
+                    if (comando == "agregar_stock") then
+                        call agregar_stock(nombre, cantidad_int, ubicacion)
+                    else if (comando == "eliminar_equipo") then
+                        call eliminar_equipo(nombre, cantidad_int, ubicacion)
+                    end if
+                end if
+            end if
+        end if
+    end do
+
+    close(unit=iunit)
+end subroutine AccionesArchivo
+
+
+subroutine agregar_stock(nombre, cantidad, ubicacion)
+    use productoModule
+    use global_vars
+    !dummy
+    character(len=256), intent (in) :: nombre
+    integer, intent (in) :: cantidad
+    character(len=256), intent (in) :: ubicacion
+    logical :: encontrado = .false.
+
+    do i=1, n-1
+        if(trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
+            call inventario(i)%agregarStock(cantidad)
+            encontrado = .true.
+            print *, "Stock agregado a", nombre, "en", ubicacion
+            print *, "Nueva cantidad:", inventario(i)%cantidad
+        end if
+    end do
+
+    if (.not. encontrado) then
+        print *, "No se encontró el producto",nombre, "en la ubicación", ubicacion
+    end if
+end subroutine agregar_stock
+
+subroutine eliminar_equipo(nombre, cantidad, ubicacion)
+    use productoModule
+    use global_vars
+    !dummy
+    character(len=256), intent (in) :: nombre
+    integer, intent (in) :: cantidad
+    character(len=256), intent (in) :: ubicacion
+    logical :: encontrado = .false.
+
+    do i=1, n-1
+        if(trim(inventario(i)%nombre) == trim(nombre) .and. trim(inventario(i)%ubicacion) == trim(ubicacion)) then
+            call inventario(i)%quitarStock(cantidad)
+            encontrado = .true.
+            print *, "Stock reducido de",nombre, "en ",ubicacion
+            print *, "Nueva cantidad:",inventario(i)%cantidad
+        end if
+    end do
+
+    if (.not. encontrado) then
+        print *, "No se encontró el producto",nombre, "en la ubicación", ubicacion
+    end if
+end subroutine eliminar_equipo
