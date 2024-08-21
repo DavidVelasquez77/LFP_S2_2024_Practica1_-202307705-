@@ -60,9 +60,9 @@ program main
         PRINT *, '****************************************'
         PRINT *, '         SISTEMA DE INVENTARIO          '
         PRINT *, '****************************************'
-        PRINT *, '1. Cargar Inventario'
-        PRINT *, '2. Cargar Movimientos'
-        PRINT *, '3. Mostrar Inventario'
+        PRINT *, '1. Cargar Inventario Inicial'
+        PRINT *, '2. Cargar Instrucciones de Movimientos'
+        PRINT *, '3. Crear Informe de Inventario'
         PRINT *, '4. Salir'
         PRINT *, '****************************************'
         PRINT *, 'Seleccione una opcion (1-4):'
@@ -74,7 +74,7 @@ program main
         case (2)
             call AccionesArchivo()
         case (3)
-            
+            call CrearInformeInventario()        
         case (4)
             print *, "Saliendo del sistema..."
             do i=1, n-1
@@ -309,3 +309,37 @@ subroutine eliminar_equipo(nombre, cantidad, ubicacion)
     end if
 end subroutine eliminar_equipo
 
+subroutine CrearInformeInventario()
+    use productoModule
+    use global_vars
+    implicit none
+    integer :: iunit, j
+    real :: valor_total
+    character(len=256) :: archivoSalida
+
+    archivoSalida = 'informe.txt'
+    iunit = 20
+
+    ! Abrir el archivo para escribir
+    open(unit=iunit, file=trim(archivoSalida), status='replace', action='write')
+
+    ! Escribir encabezado del informe con formato
+    write(iunit, '(A)') '********************************************************************************'
+    write(iunit, '(A)') '*                        Informe de Inventario Actual                          *'
+    write(iunit, '(A)') '********************************************************************************'
+    write(iunit, '(A)') '* Equipo               | Cantidad | Precio Unit | Valor Total | Ubicación      *'
+    write (iunit,'(A)') '--------------------------------------------------------------------------------'
+
+    ! Escribir los detalles del inventario
+    do j = 1, n-1
+        valor_total = inventario(j)%cantidad * inventario(j)%precio_unitario
+        write(iunit, '(A, T22, I7, T32, F11.2, T45, F12.2, T60, A)') &
+            trim(adjustl(inventario(j)%nombre)), inventario(j)%cantidad, inventario(j)%precio_unitario, valor_total, trim(adjustl(inventario(j)%ubicacion))
+    end do
+
+    ! Cerrar el archivo
+    close(unit=iunit)
+
+    ! Mensaje de confirmación
+    print *, "Informe de inventario creado en", trim(archivoSalida)
+end subroutine CrearInformeInventario
